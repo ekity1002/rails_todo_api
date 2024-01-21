@@ -1,6 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe 'Todos API', type: :request do
+  # 事前にテスト用のTODOを作成
+  let!(:todos) { create_list(:todo, 10) }
+
   describe 'POST /todos' do
     let(:valid_attributes) {{todo: {title: "HOGE", due_date: Date.tomorrow}}}
     context 'when the request is valid' do
@@ -17,4 +20,33 @@ RSpec.describe 'Todos API', type: :request do
       end
     end
   end
+
+  describe 'GET /todos' do
+    before {get '/todos'}
+    it 'returns todos' do
+      expect(response).to have_http_status(200)
+      expect(JSON.parse(response.body).size).to eq(10)
+    end
+  end
+
+  describe 'GET /todos/:id' do
+    before {get "/todos/#{todo_id}" }
+    context 'when the record exists' do
+      let(:todo_id) { todos.first.id }
+      it 'returns todo' do
+        expect(response).to have_http_status(200)
+        expect(JSON.parse(response.body)).not_to be_empty
+        expect(JSON.parse(response.body)["id"]).to eq(todo_id)
+      end
+    end
+
+    context 'when the record does not exist' do
+      let(:todo_id) { 100 }
+      it 'returns status code 404' do
+        expect(response).to have_http_status(404)
+      end
+    end
+  end
+
+
 end
