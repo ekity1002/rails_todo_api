@@ -4,6 +4,7 @@ RSpec.describe 'Todos API', type: :request do
   # 事前にテスト用のTODOを作成
   let!(:todos) { create_list(:todo, 10) }
   let(:valid_attributes) {{todo: {title: "HOGE", due_date: Date.tomorrow}}}
+  let(:invalid_attributes) {{todo: {title: "HOGE", due_date: Date.tomorrow, description: "b"*501}}}
 
   describe 'POST /todos' do
     context 'when the request is valid' do
@@ -49,20 +50,30 @@ RSpec.describe 'Todos API', type: :request do
   end
 
   describe 'PUT /todos/:id' do
-    before { put "/todos/#{todo_id}", params: valid_attributes }
-    context 'when the record exists' do
-      let(:todo_id) { 1 }
-      it 'updates the record' do
-        expect(response).to have_http_status(200)
-        updated_todo = Todo.find(todo_id)
-        expect(updated_todo.title).to eq('HOGE')
+    context 'when the parameter is valid' do
+      before { put "/todos/#{todo_id}", params: valid_attributes }
+      context 'when the record exists' do
+        let(:todo_id) { 1 }
+        it 'updates the record' do
+          expect(response).to have_http_status(200)
+          updated_todo = Todo.find(todo_id)
+          expect(updated_todo.title).to eq('HOGE')
+        end
+      end
+
+      context 'when the record does not exist' do
+        let(:todo_id) { 100 }
+        it 'returns status code 404' do
+          expect(response).to have_http_status(404)
+        end
       end
     end
 
-    context 'when the record does not exist' do
-      let(:todo_id) { 100 }
-      it 'returns status code 404' do
-        expect(response).to have_http_status(404)
+    context 'when the parameter is invalid' do
+      before { put "/todos/#{todo_id}", params: invalid_attributes }
+      let(:todo_id) { todos.first.id }
+      it 'returns status code 422' do
+        expect(response).to have_http_status(422)
       end
     end
   end
