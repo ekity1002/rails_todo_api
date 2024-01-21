@@ -5,13 +5,13 @@ RSpec.describe Todo, type: :model do
     Todo.new(
       title: "Test Todo",
       description: "Test description",
-      due_date: Date.tomorrow,
-      completed: true
+      due_date: Date.tomorrow
     )
   end
 
   it "is valid with a title, description, completed, due_date" do
     expect(todo).to be_valid
+    expect(todo.completed).to eq(false)
   end
 
   context "when title is missing" do
